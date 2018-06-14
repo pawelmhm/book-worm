@@ -17,6 +17,7 @@ class BookWormItem(scrapy.Item):
     year_url = scrapy.Field()
     content_id = scrapy.Field()
     file_path = scrapy.Field()
+    text = scrapy.Field()
 
 
 

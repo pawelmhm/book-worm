@@ -6,40 +6,44 @@
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 #
 #
+from __future__ import print_function
 import zipfile
 from StringIO import StringIO
+from os import path
 
 import djvu.decode
 
 from scrapy import Request
 from slugify import slugify
+import sys
 
 
-def print_text(sexpr, level=0):
-    if level > 0:
-        print(' ' * (2 * level - 1))
+def print_text(sexpr, buffer):
     if isinstance(sexpr, djvu.sexpr.ListExpression):
         if len(sexpr) == 0:
             return
-        print(str(sexpr[0].value), [sexpr[i].value for i in range(1, 5)])
         for child in sexpr[5:]:
-            print_text(child, level + 1)
+            print_text(child, buffer)
     else:
-        print(sexpr)
-
+        buffer.write(" " + sexpr.bytes.decode('utf8').replace("\"", ""))
 
 class Context(djvu.decode.Context):
 
     def handle_message(self, message):
         if isinstance(message, djvu.decode.ErrorMessage):
-            print(message)
+            print(message, file=sys.stderr)
+            # TODO exceptions in djvu parsing hang whole process, why?
+            return
 
     def process(self, path):
         document = self.new_document(djvu.decode.FileURI(path))
         document.decoding_job.wait()
+        buffer = StringIO()
         for page in document.pages:
             page.get_info()
-            print_text(page.text.sexpr)
+            print_text(page.text.sexpr, buffer)
+        return buffer.getvalue()
+
 
 STORE_PATH = '/home/pawel/Documents/journals'
 
@@ -67,11 +71,15 @@ class BookWormPipeline(object):
     def parse_djvu(self, response):
         item = response.meta['item']
         content_id = item['title']
-        store_path = STORE_PATH + '/' + slugify(content_id)
+        store_path = path.join(STORE_PATH, slugify(content_id))
         item['file_path'] = store_path
         buffer = StringIO(response.body)
         zip_file = zipfile.ZipFile(buffer)
         zip_file.extractall(store_path)
+        index_path = path.join(store_path, 'index.djvu')
+        context = Context()
+        text = context.process(index_path)
+        item['text'] = text
         return item
 
     def finish(self, response):
