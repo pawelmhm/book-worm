@@ -6,7 +6,8 @@
 # https://doc.scrapy.org/en/latest/topics/items.html
 
 import scrapy
-from scrapy.loader import ItemLoader
+from scrapy.loader import ItemLoader, Identity
+from scrapy.loader.processors import TakeFirst
 
 
 class BookWormItem(scrapy.Item):
@@ -14,6 +15,15 @@ class BookWormItem(scrapy.Item):
     title = scrapy.Field()
     djvu_url = scrapy.Field()
     year_url = scrapy.Field()
+    content_id = scrapy.Field()
+    file_path = scrapy.Field()
+
+
 
 class BookWormItemLoader(ItemLoader):
     default_item_class = BookWormItem
+    content_id_out = TakeFirst()
+    djvu_url_out = TakeFirst()
+    title_out = TakeFirst()
+    file_path = TakeFirst()
+

@@ -41,5 +41,9 @@ class DlibraSpider(scrapy.Spider):
         if not djvu_url:
             self.logger.error('no djvu')
             return
-        loader.add_value('djvu_url', urljoin(self.root_url, djvu_url.group(1)))
+
+        djvu_url = djvu_url.group(1).replace('index.djvu', 'zip/')
+        content_id = re.search("Content/(\d+)/zip", djvu_url).group(1)
+        loader.add_value('djvu_url', urljoin(self.root_url, djvu_url))
+        loader.add_value('content_id', content_id)
         return loader.load_item()
