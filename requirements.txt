@@ -1,2 +1,3 @@
 Scrapy==1.5.0
 python-djvulibre==0.8.2
+python-slugify==1.2.5
