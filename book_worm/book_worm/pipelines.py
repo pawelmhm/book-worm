@@ -27,9 +27,11 @@ def print_text(sexpr, buffer):
     else:
         buffer.write(" " + sexpr.bytes.decode('utf8').replace("\"", ""))
 
+
 class Context(djvu.decode.Context):
 
     def handle_message(self, message):
+        # noinspection PyPackageRequirements
         if isinstance(message, djvu.decode.ErrorMessage):
             print(message, file=sys.stderr)
             # TODO exceptions in djvu parsing hang whole process, why?

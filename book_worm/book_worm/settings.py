@@ -66,7 +66,14 @@ ROBOTSTXT_OBEY = True
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'book_worm.pipelines.BookWormPipeline': 300,
+    # need to go at the end
+    'scrapyelasticsearch.scrapyelasticsearch.ElasticSearchPipeline': 500
 }
+ELASTICSEARCH_SERVERS = ['localhost']
+ELASTICSEARCH_INDEX = 'scrapy'
+ELASTICSEARCH_INDEX_DATE_FORMAT = '%Y-%m'
+ELASTICSEARCH_TYPE = 'items'
+ELASTICSEARCH_UNIQ_KEY = 'title'  # Custom unique key
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
