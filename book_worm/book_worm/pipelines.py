@@ -86,3 +86,11 @@ class BookWormPipeline(object):
 
     def finish(self, response):
         return response.meta['item']
+
+
+
+class DefaultValuesPipeline(object):
+
+    def process_item(selfse, item, spider):
+        item['crawl_id'] = spider.crawl_id
+        return item

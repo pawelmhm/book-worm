@@ -19,7 +19,7 @@ NEWSPIDER_MODULE = 'book_worm.spiders'
 #USER_AGENT = 'book_worm (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+# ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -65,6 +65,8 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
+
+    'book_worm.pipelines.DefaultValuesPipeline': 200,
     'book_worm.pipelines.BookWormPipeline': 300,
     # need to go at the end
     'scrapyelasticsearch.scrapyelasticsearch.ElasticSearchPipeline': 500
@@ -90,7 +92,7 @@ ELASTICSEARCH_UNIQ_KEY = 'title'  # Custom unique key
 
 # Enable and configure HTTP caching (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings
-#HTTPCACHE_ENABLED = True
+HTTPCACHE_ENABLED = True
 #HTTPCACHE_EXPIRATION_SECS = 0
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []

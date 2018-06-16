@@ -7,7 +7,7 @@
 
 import scrapy
 from scrapy.loader import ItemLoader, Identity
-from scrapy.loader.processors import TakeFirst
+from scrapy.loader.processors import TakeFirst, Join
 
 
 class BookWormItem(scrapy.Item):
@@ -18,7 +18,7 @@ class BookWormItem(scrapy.Item):
     content_id = scrapy.Field()
     file_path = scrapy.Field()
     text = scrapy.Field()
-
+    crawl_id = scrapy.Field()
 
 
 class BookWormItemLoader(ItemLoader):
@@ -26,5 +26,6 @@ class BookWormItemLoader(ItemLoader):
     content_id_out = TakeFirst()
     djvu_url_out = TakeFirst()
     title_out = TakeFirst()
-    file_path = TakeFirst()
+    file_path_out = TakeFirst()
+    text_out = Join()
 

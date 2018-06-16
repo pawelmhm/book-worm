@@ -1,22 +1,39 @@
-# -*- coding: utf-8 -*-
+import datetime
+import hashlib
 import re
 from urlparse import urljoin
 
 import scrapy
+from scrapy import Request
+from scrapy.loader.processors import MapCompose
 
 from book_worm.items import BookWormItemLoader
-from scrapy import Request
 
 
-class DlibraSpider(scrapy.Spider):
-    name = 'przewodnik_katolicki'
-    start_urls = ['http://www.wbc.poznan.pl/dlibra/publication?id=172396']
-    root_url = 'http://www.wbc.poznan.pl'
+class BaseDlibraSpider(scrapy.Spider):
+    root_url = ''
+    publication_id = ''
+    year_regex = ''
+
+    def __init__(self, *args, **kwargs):
+        self.start_urls = [
+            "{}/dlibra/publication?id={}".format(
+                self.root_url, self.publication_id
+            )
+        ]
+        self.crawl_id = hashlib.md5(
+            self.name + datetime.datetime.now().isoformat()).hexdigest(
+
+        )
 
     def parse(self, response):
-        for x in response.css("#struct > ul > li > ul li a.item-content::attr(href)").extract():
-            yield Request(x, callback=self.parse_year)
-            break
+        for x in response.css("#struct > ul > li > ul li a.item-content"):
+            href = x.xpath("./@href").get()
+            title = x.xpath("./text()").get()
+            if self.year_regex and title:
+                if not re.search(self.year_regex, title):
+                    continue
+            yield Request(href, callback=self.parse_year)
 
     def parse_year(self, response):
         link_path = "#struct > ul > li > ul li a.contentTriggerStruct"
@@ -24,6 +41,9 @@ class DlibraSpider(scrapy.Spider):
         for book in response.css(link_path):
             loader = BookWormItemLoader(selector=book)
             loader.add_xpath("title", "./@title")
+            # loader.add_xpath("_id", "./@title", MapCompose(
+            #    lambda x: hashlib.md5(x).hexdigest()
+            # ))
             loader.add_value("year_url", response.url)
             djvu_page_url = book.xpath("./@href").get()
 
