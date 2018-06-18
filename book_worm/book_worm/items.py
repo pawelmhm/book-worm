@@ -19,6 +19,7 @@ class BookWormItem(scrapy.Item):
     file_path = scrapy.Field()
     text = scrapy.Field()
     crawl_id = scrapy.Field()
+    publication_name = scrapy.Field()
 
 
 class BookWormItemLoader(ItemLoader):
@@ -28,4 +29,5 @@ class BookWormItemLoader(ItemLoader):
     title_out = TakeFirst()
     file_path_out = TakeFirst()
     text_out = Join()
+    publication_name = TakeFirst()
 

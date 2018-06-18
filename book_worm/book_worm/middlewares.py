@@ -4,14 +4,18 @@
 #
 # See documentation in:
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
+import logging
 
-from scrapy import signals
+from scrapy import signals, Item
+
+logger = logging.getLogger(__name__)
 
 
 class BookWormSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
     # passed objects.
+    items = 0
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -33,6 +37,11 @@ class BookWormSpiderMiddleware(object):
 
         # Must return an iterable of Request, dict or Item objects.
         for i in result:
+            if isinstance(i, Item):
+                self.items += 1
+            if spider.item_limit and self.items >= spider.item_limit:
+                logger.info('reached limit of {} closing'.format(spider.item_limit))
+                return
             yield i
 
     def process_spider_exception(self, response, exception, spider):

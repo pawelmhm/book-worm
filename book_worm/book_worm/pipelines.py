@@ -78,7 +78,7 @@ class BookWormPipeline(object):
         buffer = StringIO(response.body)
         zip_file = zipfile.ZipFile(buffer)
         zip_file.extractall(store_path)
-        index_path = path.join(store_path, 'index.djvu')
+        index_path = path.join(store_path, self.crawler.spider.djvu_root_file)
         context = Context()
         text = context.process(index_path)
         item['text'] = text
@@ -93,4 +93,5 @@ class DefaultValuesPipeline(object):
 
     def process_item(selfse, item, spider):
         item['crawl_id'] = spider.crawl_id
+        item['publication_name'] = spider.name
         return item

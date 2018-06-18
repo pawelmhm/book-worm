@@ -5,7 +5,6 @@ from urlparse import urljoin
 
 import scrapy
 from scrapy import Request
-from scrapy.loader.processors import MapCompose
 
 from book_worm.items import BookWormItemLoader
 
@@ -14,6 +13,9 @@ class BaseDlibraSpider(scrapy.Spider):
     root_url = ''
     publication_id = ''
     year_regex = ''
+    item_limit = 0
+    zip_url = '{}/Content/{}/zip/'
+    djvu_root_file = 'index.djvu'
 
     def __init__(self, *args, **kwargs):
         self.start_urls = [
@@ -38,7 +40,7 @@ class BaseDlibraSpider(scrapy.Spider):
     def parse_year(self, response):
         link_path = "#struct > ul > li > ul li a.contentTriggerStruct"
 
-        for book in response.css(link_path):
+        for book in response.css(link_path)[51:100]:
             loader = BookWormItemLoader(selector=book)
             loader.add_xpath("title", "./@title")
             # loader.add_xpath("_id", "./@title", MapCompose(
@@ -63,7 +65,7 @@ class BaseDlibraSpider(scrapy.Spider):
             return
 
         djvu_url = djvu_url.group(1).replace('index.djvu', 'zip/')
-        content_id = re.search("Content/(\d+)/zip", djvu_url).group(1)
-        loader.add_value('djvu_url', urljoin(self.root_url, djvu_url))
+        content_id = re.search("Content/(\d+)/", djvu_url).group(1)
+        loader.add_value('djvu_url', self.zip_url.format(self.root_url, content_id))
         loader.add_value('content_id', content_id)
         return loader.load_item()
