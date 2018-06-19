@@ -16,6 +16,8 @@ class BaseDlibraSpider(scrapy.Spider):
     item_limit = 0
     zip_url = '{}/Content/{}/zip/'
     djvu_root_file = 'index.djvu'
+    limit_start = 0
+    limit_end = 1000
 
     def __init__(self, *args, **kwargs):
         self.start_urls = [
@@ -40,7 +42,7 @@ class BaseDlibraSpider(scrapy.Spider):
     def parse_year(self, response):
         link_path = "#struct > ul > li > ul li a.contentTriggerStruct"
 
-        for book in response.css(link_path)[51:100]:
+        for book in response.css(link_path)[self.limit_start:self.limit_end]:
             loader = BookWormItemLoader(selector=book)
             loader.add_xpath("title", "./@title")
             # loader.add_xpath("_id", "./@title", MapCompose(
