@@ -8,11 +8,13 @@
 #     https://doc.scrapy.org/en/latest/topics/settings.html
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
+import logging
 
 BOT_NAME = 'book_worm'
 
 SPIDER_MODULES = ['book_worm.spiders']
 NEWSPIDER_MODULE = 'book_worm.spiders'
+logging.getLogger('pdfminer').setLevel(logging.WARNING)
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -69,7 +71,8 @@ ITEM_PIPELINES = {
     'book_worm.pipelines.DefaultValuesPipeline': 200,
     'book_worm.pipelines.BookWormPipeline': 300,
     # need to go at the end
-    'scrapyelasticsearch.scrapyelasticsearch.ElasticSearchPipeline': 500
+
+    # 'scrapyelasticsearch.scrapyelasticsearch.ElasticSearchPipeline': 500
 }
 ELASTICSEARCH_SERVERS = ['localhost']
 ELASTICSEARCH_INDEX = 'scrapy'

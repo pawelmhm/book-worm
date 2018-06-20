@@ -1,15 +1,12 @@
-import datetime
-import hashlib
 import re
-from urlparse import urljoin
 
-import scrapy
 from scrapy import Request
 
+from book_worm.base_spiders.base import BaseSpider
 from book_worm.items import BookWormItemLoader
 
 
-class BaseDlibraSpider(scrapy.Spider):
+class BaseDlibraSpider(BaseSpider):
     root_url = ''
     publication_id = ''
     year_regex = ''
@@ -25,10 +22,7 @@ class BaseDlibraSpider(scrapy.Spider):
                 self.root_url, self.publication_id
             )
         ]
-        self.crawl_id = hashlib.md5(
-            self.name + datetime.datetime.now().isoformat()).hexdigest(
 
-        )
 
     def parse(self, response):
         for x in response.css("#struct > ul > li > ul li a.item-content"):

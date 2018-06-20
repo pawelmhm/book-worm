@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
-from urllib import quote_plus
+from urllib.parse import quote_plus
 
 import scrapy
 
 
 class PolonaSpider(scrapy.Spider):
-    name = 'polona'
+    name = 'academi'
     search_url = 'https://polona.pl/api/entities/?size=55&query={}&filters=public%3A1'
     query = 'nasz przegląd organ niezależny 1934'
 

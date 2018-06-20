@@ -7,16 +7,21 @@
 #
 #
 from __future__ import print_function
+
+import logging
 import zipfile
-from StringIO import StringIO
+from io import BytesIO
 from os import path
 
+import dateparser
 import djvu.decode
+import pdfminer.high_level
 
 from scrapy import Request
 from slugify import slugify
 import sys
 
+logger = logging.getLogger(__name__)
 
 def print_text(sexpr, buffer):
     if isinstance(sexpr, djvu.sexpr.ListExpression):
@@ -40,7 +45,7 @@ class Context(djvu.decode.Context):
     def process(self, path):
         document = self.new_document(djvu.decode.FileURI(path))
         document.decoding_job.wait()
-        buffer = StringIO()
+        buffer = BytesIO()
         for page in document.pages:
             page.get_info()
             print_text(page.text.sexpr, buffer)
@@ -48,6 +53,7 @@ class Context(djvu.decode.Context):
 
 
 STORE_PATH = '/home/pawel/Documents/journals'
+
 
 
 class BookWormPipeline(object):
@@ -60,14 +66,23 @@ class BookWormPipeline(object):
         return cls(crawler)
 
     def process_item(self, item, spider):
-        djvu_url = item['djvu_url']
-        assert djvu_url
+        djvu_url = item.get('djvu_url')
+        pdf_url = item.get('pdf_url')
+        if djvu_url:
+            callback = self.parse_djvu
+            url = djvu_url
+        elif pdf_url:
+            callback = self.parse_pdf
+            url = pdf_url
+        else:
+            logger.error('missing resource url {}'.format(item.get('title')))
+            return
 
-        request = Request(djvu_url, callback=self.parse_djvu, meta={
+        request = Request(url, meta={
             'item': item
-        }, errback=self.finish)
+        })
         dfd = self.crawler.engine.download(request, spider)
-        dfd.addCallbacks(callback=self.parse_djvu, errback=self.finish)
+        dfd.addCallbacks(callback=callback, errback=self.finish)
         return dfd
 
     def parse_djvu(self, response):
@@ -75,12 +90,23 @@ class BookWormPipeline(object):
         content_id = item['title']
         store_path = path.join(STORE_PATH, slugify(content_id))
         item['file_path'] = store_path
-        buffer = StringIO(response.body)
+        buffer = BytesIO(response.body)
         zip_file = zipfile.ZipFile(buffer)
         zip_file.extractall(store_path)
         index_path = path.join(store_path, self.crawler.spider.djvu_root_file)
         context = Context()
         text = context.process(index_path)
+        item['text'] = text
+        return item
+
+    def parse_pdf(self, response):
+        item = response.meta['item']
+        response_file = BytesIO(response.body)
+        output = BytesIO()
+        pdfminer.high_level.extract_text_to_fp(response_file, output)
+        text = output.getvalue()
+
+        text = text[:100]
         item['text'] = text
         return item
 
@@ -94,4 +120,9 @@ class DefaultValuesPipeline(object):
     def process_item(selfse, item, spider):
         item['crawl_id'] = spider.crawl_id
         item['publication_name'] = spider.name
+        publication_date = item.pop('publication_date_raw', '')
+        if publication_date:
+            new_date = dateparser.parse(publication_date)
+            if new_date:
+                item['publication_date'] = new_date.isoformat()
         return item
